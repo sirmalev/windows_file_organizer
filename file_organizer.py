@@ -5,14 +5,13 @@ from tkinter import filedialog
 # The directory you want to organize
 DIR_PATH = ''  # Example: 'C:/Users/YourName/Downloads'
 
-# Mapping of file extensions to directory names
+# Mapping of file types to directory names
 ORGANIZATION_MAP = {
     'Images': ['.jpg', '.jpeg', '.png', '.gif'],
     'Documents': ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'],
     'Videos': ['.mp4', '.mkv', '.flv', '.mpeg'],
     'Archives': ['.zip', '.tar', '.rar', '.gz'],
     'Other':['.exe','.lnk','.url',],
-    # Add more categories as needed
 }
 
 # Extended organize_files function
@@ -25,10 +24,10 @@ def organize_files(dir_path):
         if os.path.isdir(file_path):
             continue
 
-        file_extension = os.path.splitext(filename)[1]
+        file_type = os.path.splitext(filename)[1]
     
-        for dir_name, extensions in ORGANIZATION_MAP.items():
-            if file_extension in extensions:
+        for dir_name, types in ORGANIZATION_MAP.items():
+            if file_type in types:
                 # Create directory if it doesn't exist
                 new_dir_path = os.path.join(dir_path, dir_name)
                 if not os.path.exists(new_dir_path):
@@ -48,20 +47,20 @@ def run_organizer():
     result_var.set("Files organized!")
 
 def dispose_entry():
-    cat_var.set('')
-    ext_var.set('')
+    fold_var.set('')
+    type_var.set('')
 
-def add_custom_category():
-    cat_name = cat_var.get()
-    exts = [e.strip() for e in ext_var.get().split(",")]
+def add_custom_folder():
+    fold_name = fold_var.get()
+    exts = [e.strip() for e in type_var.get().split(",")]
     for key in ORGANIZATION_MAP:
-        if (cat_name.lower() == key.lower()):
+        if (fold_name.lower() == key.lower()):
             print(key)
             for val in exts:
                 ORGANIZATION_MAP[key].append(val)
             dispose_entry()
             return        
-    ORGANIZATION_MAP[cat_name] = exts
+    ORGANIZATION_MAP[fold_name] = exts
     dispose_entry()
 
 
@@ -77,40 +76,40 @@ def open_new_window():
         for widget in new_window.winfo_children():
             widget.destroy()  # Clear the window
 
-        for category, extensions in ORGANIZATION_MAP.items():
-            tk.Button(new_window, text="Remove", command=lambda cat=category: remove_organize_folder(cat)).grid(row=row, column=0, sticky="w", padx=10, pady=5)
+        for folder, types in ORGANIZATION_MAP.items():
+            tk.Button(new_window, text="Remove", command=lambda fold=folder: remove_organize_folder(fold)).grid(row=row, column=0, sticky="w", padx=10, pady=5)
 
-            tk.Label(new_window, text=category, font=("Arial", 12, "bold")).grid(row=row, column=1, sticky="w", padx=10, pady=5)
+            tk.Label(new_window, text=folder, font=("Arial", 12, "bold")).grid(row=row, column=1, sticky="w", padx=10, pady=5)
             column = 2
-            for extension in extensions:
+            for type in types:
                 # Create a variable to hold the checkbox state (0 for unchecked, 1 for checked)
                 checkbox_state = tk.IntVar()
-                checkbox_states[extension] = checkbox_state
+                checkbox_states[type] = checkbox_state
                 
-                # Create a checkbox next to each extension
+                # Create a checkbox next to each file type
                 tk.Checkbutton(new_window, variable=checkbox_state).grid(row=row, column=column)
                 column += 1
-                tk.Label(new_window, text=extension).grid(row=row, column=column, padx=5, pady=5)
+                tk.Label(new_window, text=type).grid(row=row, column=column, padx=5, pady=5)
                 column += 1
             row += 1
         tk.Button(new_window, text="Remove Selected", command=update_map).grid(row=row+1, column=0, columnspan=10, pady=10)
 
-    def remove_organize_folder(category):
-        if category in ORGANIZATION_MAP:
-            del ORGANIZATION_MAP[category]
+    def remove_organize_folder(folder):
+        if folder in ORGANIZATION_MAP:
+            del ORGANIZATION_MAP[folder]
         render_map()
 
     def update_map():
-        for extension, state in checkbox_states.items():
+        for type, state in checkbox_states.items():
             if state.get():
-                for category, extensions in ORGANIZATION_MAP.items():
-                    if extension in extensions:
-                        extensions.remove(extension)  # Remove the extension from the category list
+                for folder, types in ORGANIZATION_MAP.items():
+                    if type in types:
+                        types.remove(type)  # Remove the file type from the folder list
 
-        # Remove categories with no extensions
-        empty_categories = [category for category, extensions in ORGANIZATION_MAP.items() if not extensions]
-        for category in empty_categories:
-            del ORGANIZATION_MAP[category]
+        # Remove folders with no file types
+        empty_folders = [folder for folder, types in ORGANIZATION_MAP.items() if not types]
+        for folder in empty_folders:
+            del ORGANIZATION_MAP[folder]
                         
         render_map()  # Refresh the window
 
@@ -122,8 +121,8 @@ root.title("File Organizer")
 
 dir_var = tk.StringVar()
 result_var = tk.StringVar()
-cat_var = tk.StringVar()
-ext_var = tk.StringVar()
+fold_var = tk.StringVar()
+type_var = tk.StringVar()
 
 
 tk.Label(root, text="Directory Path:").grid(row=0, column=0, padx=10, pady=10, sticky="w")
@@ -131,11 +130,11 @@ tk.Entry(root, textvariable=dir_var, width=40).grid(row=0, column=1, padx=10, pa
 tk.Button(root, text="Browse", command=select_directory).grid(row=0, column=2, padx=10, pady=10)
 tk.Button(root, text="Organize Files", command=run_organizer).grid(row=1, column=0, columnspan=3, padx=10, pady=10)
 tk.Label(root, textvariable=result_var,fg="green").grid(row=4, column=0, columnspan=9, padx=100, pady=10)
-tk.Label(root, text="New Category:").grid(row=5, column=0)
-tk.Entry(root, textvariable=cat_var,).grid(row=5, column=1)
-tk.Label(root, text="Extensions (comma separated):").grid(row=6, column=0, padx=10, pady=10)
-tk.Entry(root, textvariable=ext_var).grid(row=6, column=1)
-tk.Button(root, text="Add Category", command=add_custom_category).grid(row=5, column=2, rowspan=2, padx=10, pady=10)
+tk.Label(root, text="New Folder:").grid(row=5, column=0)
+tk.Entry(root, textvariable=fold_var,).grid(row=5, column=1)
+tk.Label(root, text="Type of File (comma separated):").grid(row=6, column=0, padx=10, pady=10)
+tk.Entry(root, textvariable=type_var).grid(row=6, column=1)
+tk.Button(root, text="Add Type", command=add_custom_folder).grid(row=5, column=2, rowspan=2, padx=10, pady=10)
 tk.Button(root, text="Organization Map", command=open_new_window).grid(row=2, column=0, columnspan=3, padx=100, pady=10)
 tk.Label(root, text="made by: sir.malev").grid(row=7, column=0, columnspan=3 ,padx=10, pady=10,)
 
